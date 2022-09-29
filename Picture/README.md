@@ -9,3 +9,5 @@ Naming rules:
   2_\*: pictures of the new model bought by prp 41th.
   
   3_\*: pictures of the new model bought in 2022 Fall.
+
+Special description can be commited together or added at the last (eg. 2_3-1-blue).
