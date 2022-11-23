@@ -6,7 +6,7 @@ import copy
 # —————— hsv color
 # black
 lower_black = np.array([0,0,0])
-upper_black = np.array([180,255,46])
+upper_black = np.array([180,255,100])
 #blue
 # lower_black = np.array([100,43,46])
 # upper_black = np.array([124,255,255])
@@ -21,47 +21,12 @@ h = 140
 s = 100
 v = 117
 
-picname = "1023_5"
+picname = "1023_3"
 # picname = str(input('picname = '))
 picnameL=picname+"-1"
 picnameR=picname+"-2"
 
-# ——————
-
-# 读取原图
-pathIn="PicIn/"+picnameL+".jpg"
-
-imgColChan = cv2.imread(pathIn)
-
-# 颜色范围
-hsv_img = cv2.cvtColor(imgColChan, cv2.COLOR_BGR2HSV) # 转到HSV
-mask_green = cv2.inRange(hsv_img, lower_black, upper_black)
-mask_other = cv2.inRange(hsv_img,lower_other,upper_other)
-# 中值滤波
-mask_green = cv2.medianBlur(mask_green, 7)
-mask_other = cv2.medianBlur(mask_other,7)
-# 轮廓提取
-contours, hierarchy = cv2.findContours(mask_green, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-contourAll, hierarchyAll = cv2.findContours(mask_other, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-
-colorNum=90 # 大致色块数
-contourRed = sorted(contourAll, key = cv2.contourArea, reverse = False)# [:colorNum]
-contours = sorted(contours,key= cv2.contourArea, reverse= True) #[:colorNum]
-
-cv2.drawContours(imgColChan,contourRed,-1,(0,0,255),-1) # 红色
-cv2.drawContours(imgColChan,contours,-1,(0,255,0),-1) # 绿色
-# cv2.drawContours(imgColChan,contours,-1,(0,0,0),-1) # black
-
-pathOut="PicIgnore/outpColChan-"+picnameL+".jpg"
-
-cv2.imwrite(pathOut, imgColChan)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-# ——————
-# correctMisAdjust.py
-
-# 剪切出鼠标选定部分， 记为finalImg.jpg
+# 剪切出鼠标选定部分，记为pathMouse/imgCutGreen
 points = []
 def on_mouse(event,x,y,flags,param):
     global points, imgOrig,Cur_point,Start_point 
@@ -72,11 +37,9 @@ def on_mouse(event,x,y,flags,param):
         Start_point = [x,y]
         points.append(Start_point)
         cv2.circle(imgOrig,tuple(Start_point),1,(255,255,255),0)
-        cv2.imshow("",imgOrig)
     elif event == cv2.EVENT_MOUSEMOVE and flags == cv2.EVENT_FLAG_LBUTTON:
         Cur_point = [x,y]
         cv2.line(imgOrig,tuple(points[-1]),tuple(Cur_point),(255,255,255))
-        cv2.imshow("",imgOrig)
         points.append(Cur_point)
     elif event == cv2.EVENT_LBUTTONUP:
         Cur_point=Start_point
@@ -84,17 +47,52 @@ def on_mouse(event,x,y,flags,param):
         cv2.circle(imgOrig,tuple(Cur_point),1,(255,255,255))
         cimg = np.zeros_like(imgOrig)
         cimg[:, :, :] = 255
-        cv2.fillConvexPoly(cimg,np.array(points),(0,0,0))
+        # cv2.fillConvexPoly(cimg,np.array(points),(0,0,0))
+        cv2.fillPoly(cimg,[np.array(points)],(0,0,0))
         imgCutGreen = cv2.bitwise_or(copyImg, cimg)
         cv2.imwrite(pathMouse, imgCutGreen)
+    cv2.imshow(winowName,imgOrig)
+        
+# ——————
+# LEFT
+
+# 读取原图
+pathIn="PicIn/"+picnameL+".jpg"
+imgColChan = cv2.imread(pathIn)
+
+# 颜色范围
+hsv_img = cv2.cvtColor(imgColChan, cv2.COLOR_BGR2HSV) # 转到HSV
+mask_green = cv2.inRange(hsv_img, lower_black, upper_black)
+# 中值滤波
+mask_green = cv2.medianBlur(mask_green, 7)
+# 轮廓提取
+contours, hierarchy = cv2.findContours(mask_green, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+pathOut="PicIgnore/outpColChan-"+picnameL+".jpg"
+for i in range(6):
+    colorNum=40+10*i # 大致筛选色块数
+    print("Now select ",colorNum," ranges with least size.")
+    contourD = sorted(contours,key= cv2.contourArea, reverse= False) [:colorNum]
+    imgbackup=imgColChan
+    cv2.drawContours(imgbackup,contourD,-1,(0,255,0),-1) # 绿色
+    cv2.drawContours(imgbackup,contourD,-1,(0,255,0),3)
+    cv2.imwrite(pathOut, imgbackup)
+    cv2.namedWindow("previewLeft", 0)
+    cv2.imshow('previewLeft',imgbackup)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    feedback=input("Is the result OK? (Y/N) ")
+    if feedback=='Y': break
+
+# correctMisAdjust.py
 
 # 读取原图并切割
 pathMouse="PicIgnore/midCutGreen-"+picnameL+".jpg"
 path = "PicIgnore/outpColChan-"+picnameL+".jpg"
 imgOrig = cv2.imread(path)
-cv2.namedWindow("DrawLeft")
-cv2.setMouseCallback("DrawLeft",on_mouse,0)
-cv2.imshow("DrawLeft",imgOrig)
+winowName="DrawLeft"
+cv2.namedWindow(winowName, 0)
+cv2.setMouseCallback(winowName,on_mouse)
 cv2.waitKey(0)
 
 #--------------------
@@ -127,10 +125,13 @@ for i in range(rows):
             imgFix[i,j]=imgCutRed[i,j]; # 替换回原图
 
 cv2.imwrite("PicOut/outpFix-"+picnameL+".jpg",imgFix)
+cv2.namedWindow("fixedPictureLeft", 0)
 cv2.imshow('fixedPictureLeft',imgFix)
 cv2.waitKey(0)
 
 
+# ——————
+# RIGHT
 
 # 读取原图
 pathIn="PicIn/"+picnameR+".jpg"
@@ -140,38 +141,36 @@ imgColChan = cv2.imread(pathIn)
 # 颜色范围
 hsv_img = cv2.cvtColor(imgColChan, cv2.COLOR_BGR2HSV) # 转到HSV
 mask_green = cv2.inRange(hsv_img, lower_black, upper_black)
-mask_other = cv2.inRange(hsv_img,lower_other,upper_other)
 # 中值滤波
 mask_green = cv2.medianBlur(mask_green, 7)
-mask_other = cv2.medianBlur(mask_other,7)
 # 轮廓提取
 contours, hierarchy = cv2.findContours(mask_green, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-contourAll, hierarchyAll = cv2.findContours(mask_other, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-
-colorNum=90 # 大致色块数
-contourRed = sorted(contourAll, key = cv2.contourArea, reverse = False)# [:colorNum]
-contours = sorted(contours,key= cv2.contourArea, reverse= True) #[:colorNum]
-
-cv2.drawContours(imgColChan,contourRed,-1,(0,0,255),-1) # 红色
-cv2.drawContours(imgColChan,contours,-1,(0,255,0),-1) # 绿色
-# cv2.drawContours(imgColChan,contours,-1,(0,0,0),-1) # black
 
 pathOut="PicIgnore/outpColChan-"+picnameR+".jpg"
+for i in range(6):
+    colorNum=40+10*i # 大致筛选色块数
+    print("Now select ",colorNum," ranges with least size.")
+    contourD = sorted(contours,key= cv2.contourArea, reverse= False) [:colorNum]
+    imgbackup=imgColChan
+    cv2.drawContours(imgbackup,contourD,-1,(0,255,0),-1) # 绿色
+    cv2.drawContours(imgbackup,contourD,-1,(0,255,0),3)
+    cv2.imwrite(pathOut, imgbackup)
+    cv2.namedWindow("previewRight", 0)
+    cv2.imshow('previewRight',imgbackup)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    feedback=input("Is the result OK? (Y/N) ")
+    if feedback=='Y': break
 
-cv2.imwrite(pathOut, imgColChan)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-# ——————
 # correctMisAdjust.py
 
 # 读取原图并切割
 pathMouse="PicIgnore/midCutGreen-"+picnameR+".jpg"
 path = "PicIgnore/outpColChan-"+picnameR+".jpg"
 imgOrig = cv2.imread(path)
-cv2.namedWindow("DrawRight")
-cv2.setMouseCallback("DrawRight",on_mouse,0)
-cv2.imshow("DrawRight",imgOrig)
+winowName="DrawRight"
+cv2.namedWindow(winowName, 0)
+cv2.setMouseCallback(winowName,on_mouse)
 cv2.waitKey(0)
 
 #--------------------
@@ -204,5 +203,6 @@ for i in range(rows):
             imgFix[i,j]=imgCutRed[i,j]; # 替换回原图
 
 cv2.imwrite("PicOut/outpFix-"+picnameR+".jpg",imgFix)
+cv2.namedWindow("fixedPictureRight", 0)
 cv2.imshow('fixedPictureRight',imgFix)
 cv2.waitKey(0)

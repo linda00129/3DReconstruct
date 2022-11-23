@@ -9,6 +9,9 @@ def judgeCol(r,g,b):
     # return g<=50 and b<=50 and r<=50 # black
     return g-r > 50 and g-b > 50 # green
 
+def judgeBlank(r,g,b):
+    return r<50 and g<50 and b<50
+
 # # not red
 # lower = np.array([10,43,46])
 # upper = np.array([156,255,255])
@@ -58,7 +61,7 @@ for i in range(len(matches)):
         p, q = kp2[m.trainIdx].pt
         r, g, b = imFL.getpixel((int(x), int(y)))
         r2, g2, b2 = imFR.getpixel((int(p), int(q)))
-        if judgeCol(r, g, b) and judgeCol(r2, g2, b2) and abs(int(q-y)) < l*0.01 and abs(int(p-x)) < w*0.1:
+        if ((judgeCol(r, g, b) and (judgeCol(r2, g2, b2) or judgeBlank (r2, g2, b2))) or (judgeCol(r2, g2, b2) and (judgeCol(r, g, b) or judgeBlank (r, g, b)))) and abs(int(q-y)) < l*0.01 and abs(int(p-x)) < w*0.1:
             matchesMask[i][j] = 1
             pts_left.append([int(x),int(y)])
             pts_right.append([int(p),int(q)])
@@ -76,7 +79,6 @@ resultImage = cv2.drawMatchesKnn(picL, kp1, picR, kp2, matches, None, **drawPara
 plt.xticks([]), plt.yticks([])
 plt.imshow(resultImage), plt.show()
 cv2.imwrite("PicOut/outpSift-"+picname+".jpg", resultImage)
-
 
 # transfer value
 queryImagePath=pathL
