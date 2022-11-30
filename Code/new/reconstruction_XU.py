@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import combined
 
 #1.跨越架的具体参数
 #----------------------------------------------------------------------------------
@@ -48,7 +49,8 @@ pts_right = []
 pts_left  = []
 
 #2.1获取左相机的坐标点
-img1=cv2.imread('NewPicture/0807_1.jpg')
+# img1=cv2.imread('NewPicture/0807_1.jpg')
+img1="PicIn/"+combined.picnameL+".jpg"
  
 def on_EVENT_LBUTTONDOWN(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:
@@ -70,7 +72,8 @@ cv2.destroyAllWindows()
 
 
 # 2.2获取右相机的坐标点
-img2=cv2.imread('NewPicture/0807_2.jpg')
+# img2=cv2.imread('NewPicture/0807_2.jpg')
+img2="PicIn/"+combined.picnameL+".jpg"
  
 def on_EVENT_LBUTTONDOWN(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:

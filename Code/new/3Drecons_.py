@@ -141,10 +141,10 @@ fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
 for pt in centtrod:
-    if abs(pt[0])>1500 or abs(pt[1])>1500 or abs(pt[2])>1500:
-        print("*************") 
-        print(pt);
-        continue;
+    # if abs(pt[0])>1500 or abs(pt[1])>1500 or abs(pt[2])>1500:
+    #     print("*************") 
+    #     print(pt);
+    #     continue;
     ax.scatter(pt[0], pt[1], pt[2], c=None, depthshade=True)
 ax.set_xlabel('x')
 ax.set_ylabel('y')
