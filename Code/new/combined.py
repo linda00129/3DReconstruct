@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 import copy
 
-# —————— hsv color
+# —————— hsv color 颜色区间 需要更改可自行搜索
 # black
 lower_black = np.array([0,0,0])
 upper_black = np.array([180,255,100])
@@ -21,12 +21,11 @@ h = 140
 s = 100
 v = 117
 
-picname = "1023_3"
-# picname = str(input('picname = '))
+picname = "1023_6"
 picnameL=picname+"-1"
 picnameR=picname+"-2"
 
-# 剪切出鼠标选定部分，记为pathMouse/imgCutGreen
+# 剪切出鼠标选定部分，记为pathMouse imgCutGreen
 points = []
 def on_mouse(event,x,y,flags,param):
     global points, imgOrig,Cur_point,Start_point 
@@ -53,6 +52,7 @@ def on_mouse(event,x,y,flags,param):
         cv2.imwrite(pathMouse, imgCutGreen)
     cv2.imshow(winowName,imgOrig)
         
+# 左右图片处理流程为重复
 # ——————
 # LEFT
 
@@ -63,19 +63,18 @@ imgColChan = cv2.imread(pathIn)
 # 颜色范围
 hsv_img = cv2.cvtColor(imgColChan, cv2.COLOR_BGR2HSV) # 转到HSV
 mask_green = cv2.inRange(hsv_img, lower_black, upper_black)
-# 中值滤波
-mask_green = cv2.medianBlur(mask_green, 7)
 # 轮廓提取
+mask_green = cv2.medianBlur(mask_green, 7)
 contours, hierarchy = cv2.findContours(mask_green, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
 pathOut="PicIgnore/outpColChan-"+picnameL+".jpg"
-for i in range(6):
-    colorNum=40+10*i # 大致筛选色块数
+for i in range(6):# 大致筛选色块数 可调整range
+    colorNum=40+10*i 
     print("Now select ",colorNum," ranges with least size.")
     contourD = sorted(contours,key= cv2.contourArea, reverse= False) [:colorNum]
     imgbackup=imgColChan
     cv2.drawContours(imgbackup,contourD,-1,(0,255,0),-1) # 绿色
-    cv2.drawContours(imgbackup,contourD,-1,(0,255,0),3)
+    cv2.drawContours(imgbackup,contourD,-1,(0,255,0),3) # 加粗轮廓以扩大涂色范围
     cv2.imwrite(pathOut, imgbackup)
     cv2.namedWindow("previewLeft", 0)
     cv2.imshow('previewLeft',imgbackup)
@@ -84,7 +83,7 @@ for i in range(6):
     feedback=input("Is the result OK? (Y/N) ")
     if feedback=='Y': break
 
-# correctMisAdjust.py
+# 原correctMisAdjust.py
 
 # 读取原图并切割
 pathMouse="PicIgnore/midCutGreen-"+picnameL+".jpg"
@@ -95,13 +94,11 @@ cv2.namedWindow(winowName, 0)
 cv2.setMouseCallback(winowName,on_mouse)
 cv2.waitKey(0)
 
-#--------------------
-
-#通过OpenCV读取图片信息
+# 读取切割部分
 imgOrig = cv2.imread("PicIgnore/midCutGreen-"+picnameL+".jpg")
-
 rows,cols,channels = imgOrig.shape
 
+#换色
 hsv = cv2.cvtColor(imgOrig, cv2.COLOR_BGR2HSV)
 mask = cv2.inRange(hsv, lower_green, upper_green) # 低于、高于_red变0
 #将制定像素点的数据设置为0, 要注意的是这三个参数对应的值是Blue, Green, Red。
@@ -115,13 +112,12 @@ for r in range(rows):
             hsv.itemset((r, c, 2), hsv.item(r, c, 2) +90-v)
 imgCutRed = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR) # 转回bgr
 
-#---------------------------
-
+# 重新拼接
 imgFix=cv2.imread(path)
 rows, cols, channels = imgCutRed.shape
 for i in range(rows):
     for j in range(cols):
-        if not all(imgCutRed[i,j]>210): # all true
+        if not all(imgCutRed[i,j]>210):
             imgFix[i,j]=imgCutRed[i,j]; # 替换回原图
 
 cv2.imwrite("PicOut/outpFix-"+picnameL+".jpg",imgFix)
@@ -135,15 +131,13 @@ cv2.waitKey(0)
 
 # 读取原图
 pathIn="PicIn/"+picnameR+".jpg"
-
 imgColChan = cv2.imread(pathIn)
 
 # 颜色范围
 hsv_img = cv2.cvtColor(imgColChan, cv2.COLOR_BGR2HSV) # 转到HSV
 mask_green = cv2.inRange(hsv_img, lower_black, upper_black)
-# 中值滤波
-mask_green = cv2.medianBlur(mask_green, 7)
 # 轮廓提取
+mask_green = cv2.medianBlur(mask_green, 7)
 contours, hierarchy = cv2.findContours(mask_green, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
 pathOut="PicIgnore/outpColChan-"+picnameR+".jpg"
@@ -173,13 +167,11 @@ cv2.namedWindow(winowName, 0)
 cv2.setMouseCallback(winowName,on_mouse)
 cv2.waitKey(0)
 
-#--------------------
-
-#通过OpenCV读取图片信息
+# 读取切割部分
 imgOrig = cv2.imread("PicIgnore/midCutGreen-"+picnameR+".jpg")
-
 rows,cols,channels = imgOrig.shape
 
+# 换色
 hsv = cv2.cvtColor(imgOrig, cv2.COLOR_BGR2HSV)
 mask = cv2.inRange(hsv, lower_green, upper_green) # 低于、高于_red变0
 #将制定像素点的数据设置为0, 要注意的是这三个参数对应的值是Blue, Green, Red。
@@ -192,8 +184,6 @@ for r in range(rows):
             hsv.itemset((r, c, 1), hsv.item(r, c, 1) +90-s)
             hsv.itemset((r, c, 2), hsv.item(r, c, 2) +90-v)
 imgCutRed = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR) # 转回bgr
-
-#---------------------------
 
 imgFix=cv2.imread(path)
 rows, cols, channels = imgCutRed.shape

@@ -4,6 +4,7 @@ from matplotlib import pyplot as plt
 from PIL import Image
 import combined
 
+# 换色部分（绿）rgb范围判断 需要更改可自行搜索
 def judgeCol(r,g,b):
     # return b-r>50 and b-g>50 #blue
     # return g<=50 and b<=50 and r<=50 # black
@@ -12,13 +13,8 @@ def judgeCol(r,g,b):
 def judgeBlank(r,g,b):
     return r<50 and g<50 and b<50
 
-# # not red
-# lower = np.array([10,43,46])
-# upper = np.array([156,255,255])
-
+# 读取原图及fix后图片
 picname = combined.picname
-# picname="2_10"
-
 pathL="PicIn/"+picname+"-1.jpg"
 pathR="PicIn/"+picname+"-2.jpg"
 pathFL="PicOut/outpFix-"+picname+"-1.jpg"
@@ -33,8 +29,6 @@ l = picL.shape[0]
 w = picL.shape[1]
 
 sift = cv2.SIFT_create()
-# maskL=cv2.inRange(picL, lower, upper)
-# maskR=cv2.inRange(picR, lower, upper)
 (kp1, des1) = sift.detectAndCompute(picL, None)
 (kp2, des2) = sift.detectAndCompute(picR, None)
 
@@ -81,5 +75,5 @@ plt.imshow(resultImage), plt.show()
 cv2.imwrite("PicOut/outpSift-"+picname+".jpg", resultImage)
 
 # transfer value
-queryImagePath=pathL
-trainingImagePath=pathR
+queryImagePath=pathFL
+trainingImagePath=pathFR
